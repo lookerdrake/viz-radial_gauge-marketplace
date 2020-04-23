@@ -1,18 +1,18 @@
-project_name: "viz-packed_bubble-marketplace"
+project_name: "viz-radial_gauge-marketplace"
 
 constant: VIS_LABEL {
-  value: "Packed Bubble"
+  value: "Radial Gauge"
   export: override_optional
 }
 
 constant: VIS_ID {
-  value: "packed_bubble-marketplace"
+  value: "radial_gauge-marketplace"
   export:  override_optional
 }
 
 visualization: {
   id: "@{VIS_ID}"
-  file: "packed_bubble.js"
+  file: "radialgauge.js"
   label: "@{VIS_LABEL}"
 }
 
