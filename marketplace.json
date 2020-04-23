@@ -1,9 +1,9 @@
 {
-    "label": "Packed Bubble Visualization",
+    "label": "Radial Gauge Visualization",
     "category_label": "Plug-ins",
     "branding": {
-      "image_uri": "https://marketplace-api.looker.com/visualization-screenshots/bubble_icon.jpg",
-      "tagline": "Use the Packed Bubble visualization to display data in a cluster of bubbles."
+      "image_uri": "https://marketplace-api.looker.com/visualization-screenshots/radial_gauge_icon.png",
+      "tagline": "Use the Radial Gauge visualization to display a measure and progress to a goal with a highly customizable gauge."
     },
   
       "constants": {
