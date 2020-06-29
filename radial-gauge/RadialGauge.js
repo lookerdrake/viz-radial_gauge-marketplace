@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import * as d3 from 'd3';
 import SSF from "ssf"
+// import { configs } from 'eslint-plugin-prettier';
 
 const RadialGauge = (props) => {
 	useEffect(() => {
@@ -67,9 +68,23 @@ const drawRadial = (props) => {
 	} else {
 		let max = props.range != undefined ? props.range[1] : Math.round(Math.max(value, target) * 1.3)
 	}
-
+	
 	// Ditch whatever is in our viz window
-	d3.select('.viz > *').remove();
+	if (props.trellis_by === "none") {
+		d3.selectAll(`.viz > *`).remove();
+		d3.selectAll(`.${ props.cleanup }`).remove();
+		d3.selectAll(`[class^='subgauge']`).remove();
+		// console.log(d3.selectAll(`class^='subgauge'`))
+	} else {
+		// d3.select(`.viz > *`).remove();
+		d3.selectAll(`.gauge`).remove();
+		d3.selectAll(`.${ props.cleanup }`).remove();
+		// console.log(props.trellis_limit, d3.selectAll(`[class^='subgauge']`).size())
+		var overfill = d3.range(props.trellis_limit, d3.selectAll(`[class^='subgauge']`).size()+1)
+		overfill.forEach(function(d) {
+			d3.selectAll(`.subgauge${d}`).remove();
+		})
+	}
 	// div that houses the svg
 	var div = d3.select('.viz')
 	  	.style('overflow-x', 'hidden')
@@ -81,6 +96,7 @@ const drawRadial = (props) => {
 	svg.attr('width', props.w)
 		.attr('height', props.h)
 		.attr('id', 'svg-viz')
+		.attr('class', props.cleanup)
 		.attr('preserveAspectRatio', 'xMidYMid meet')
 	  	.attr('viewBox', `${props.w/-2} ${props.h/-2} ${props.w} ${props.h}`);
 	let g = svg.append('g').attr('id', 'g-viz');
@@ -157,7 +173,7 @@ const drawRadial = (props) => {
 	    .outerRadius(armLength)
 	    .startAngle(-gaugeAngle)
 	    .endAngle(-gaugeAngle);
-  	g.append('path')
+  	var leftArmSel = g.append('path')
   		.attr('class', 'leftArmArc')
   		.attr('d', leftArmArc)
   		.attr('fill', props.gauge_background)
@@ -172,14 +188,14 @@ const drawRadial = (props) => {
   		.style('font-weight', "bold")
   		.attr('dx', `-${props.range_x}em`)
   		.attr('dy', `${-1*props.range_y}em`)
-  		.attr('transform', `translate(${d3.select(".leftArmArc").node().getBBox().x} ${0 + upBinary*d3.select(".leftArmArc").node().getBBox().height - (props.angle > 90 ? 90 - props.angle : 0)})`);
+  		.attr('transform', `translate(${leftArmSel.node().getBBox().x} ${0 + upBinary*leftArmSel.node().getBBox().height - (props.angle > 90 ? 90 - props.angle : 0)})`);
   	// creates a right arm border
   	var rightArmArc = d3.arc()
         .innerRadius(cutoutCalc*0.97)
       	.outerRadius(armLength)
       	.startAngle(gaugeAngle)
       	.endAngle(gaugeAngle);
-  	g.append('path')
+  	var rightArmSel = g.append('path')
   		.attr('class', 'rightArmArc')
   		.attr('d', rightArmArc)
   		.attr('fill', props.gauge_background)
@@ -194,14 +210,14 @@ const drawRadial = (props) => {
   		.style('font-weight', "bold")
   		.attr('dx', `${props.range_x-1}em`)
   		.attr('dy', `${-1*props.range_y}em`)
-  		.attr('transform', `translate(${d3.select(".rightArmArc").node().getBBox().x + d3.select(".rightArmArc").node().getBBox().width} ${0 + upBinary*d3.select(".rightArmArc").node().getBBox().height - (props.angle > 90 ? 90 - props.angle : 0)})`);
+  		.attr('transform', `translate(${rightArmSel.node().getBBox().x + rightArmSel.node().getBBox().width} ${0 + upBinary*rightArmSel.node().getBBox().height - (props.angle > 90 ? 90 - props.angle : 0)})`);
   	// create the spinner and point to the value
   	var spinnerArm = d3.arc()
       	.innerRadius(0)
       	.outerRadius(spinnerLength)
       	.startAngle(valueAngle)
       	.endAngle(valueAngle);
-  	g.append('path')
+  	var spinnerArmSel = g.append('path')
   		.attr('class', 'spinnerArm')
   		.attr('d', spinnerArm)
   		.attr('fill', props.spinner_background)
@@ -211,7 +227,7 @@ const drawRadial = (props) => {
 	  	.attr('class', 'spinnerCenter')
 	  	.attr('r', props.spinner_weight/10)
 	    .style('fill', props.spinner_background);
-	d3.select(".spinnerArm").on("click", function(d,i) {
+	spinnerArmSel.on("click", function(d,i) {
 			LookerCharts.Utils.openDrillMenu({
 	 			links: props.value_links,
 	 			event: event
@@ -245,21 +261,21 @@ const drawRadial = (props) => {
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
 	  		.attr('d', targetLabelArc);
-	  	g.append('text')
+	  	var targetValueLine = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_rendered} ${props.target_label}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
 	  		.style('font-family', 'Arial, Helvetica, sans-serif')
-	  		.attr('dy', '.35em')
-	  		.attr('x', ()=>{
+	  		.attr('dy', '.35em');
+		targetValueLine.attr('x', ()=>{
 	  			if (tarNeg > 0) {
-	  				return d3.select('.targetLabel').node().getBBox().x;
+	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
-	  				return d3.select('.targetLabel').node().getBBox().x - d3.select('.targetValue').node().getBBox().width
+	  				return targetLabelLine.node().getBBox().x - targetValueLine.node().getBBox().width
 	  			}
 	  		})
 	  		.attr('y', () => {
-	  			return d3.select('.targetLabel').node().getBBox().y
+	  			return targetLabelLine.node().getBBox().y
 	  		});
 	} else if (props.target_label_type === "dboth") {
 		var target_proportion = mapBetween(props.target,0,1,props.range[0],props.range[1])
@@ -286,21 +302,21 @@ const drawRadial = (props) => {
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
 	  		.attr('d', targetLabelArc);
-	  	g.append('text')
+	  	var targetValueLine = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_rendered} ${props.target_dimension}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
 	  		.style('font-family', 'Arial, Helvetica, sans-serif')
-	  		.attr('dy', '.35em')
-	  		.attr('x', ()=>{
+	  		.attr('dy', '.35em');
+		targetValueLine.attr('x', ()=>{
 	  			if (tarNeg > 0) {
-	  				return d3.select('.targetLabel').node().getBBox().x;
+	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
-	  				return d3.select('.targetLabel').node().getBBox().x - d3.select('.targetValue').node().getBBox().width
+	  				return targetLabelLine.node().getBBox().x - targetValueLine.node().getBBox().width
 	  			}
 	  		})
 	  		.attr('y', () => {
-	  			return d3.select('.targetLabel').node().getBBox().y
+	  			return targetLabelLine.node().getBBox().y
 	  		});
 	} else if (props.target_label_type === "dim") {
 		var target_proportion = mapBetween(props.target,0,1,props.range[0],props.range[1])
@@ -327,21 +343,21 @@ const drawRadial = (props) => {
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
 	  		.attr('d', targetLabelArc);
-	  	g.append('text')
+	  	var targetValueText = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_dimension}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
 	  		.style('font-family', 'Arial, Helvetica, sans-serif')
-	  		.attr('dy', '.35em')
-	  		.attr('x', ()=>{
+	  		.attr('dy', '.35em');
+		targetValueText.attr('x', ()=>{
 	  			if (tarNeg > 0) {
-	  				return d3.select('.targetLabel').node().getBBox().x;
+	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
-	  				return d3.select('.targetLabel').node().getBBox().x - d3.select('.targetValue').node().getBBox().width
+	  				return targetLabelLine.node().getBBox().x - targetValueText.node().getBBox().width
 	  			}
 	  		})
 	  		.attr('y', () => {
-	  			return d3.select('.targetLabel').node().getBBox().y
+	  			return targetLabelLine.node().getBBox().y
 	  		});
 	} else if (props.target_label_type === "value"){
 		var target_proportion = mapBetween(props.target,0,1,props.range[0],props.range[1])
@@ -368,21 +384,21 @@ const drawRadial = (props) => {
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
 	  		.attr('d', targetLabelArc);
-	  	g.append('text')
+		var targetValueText = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_rendered}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
 	  		.style('font-family', 'Arial, Helvetica, sans-serif')
-	  		.attr('dy', '.35em')
-	  		.attr('x', ()=>{
+	  		.attr('dy', '.35em');
+	  	targetValueText.attr('x', ()=>{
 	  			if (tarNeg > 0) {
-	  				return d3.select('.targetLabel').node().getBBox().x;
+	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
-	  				return d3.select('.targetLabel').node().getBBox().x - d3.select('.targetValue').node().getBBox().width
+	  				return targetLabelLine.node().getBBox().x - targetValueText.node().getBBox().width
 	  			}
 	  		})
 	  		.attr('y', () => {
-	  			return d3.select('.targetLabel').node().getBBox().y
+	  			return targetLabelLine.node().getBBox().y
 	  		});
 	} else if (props.target_label_type === "label"){
 		var target_proportion = mapBetween(props.target,0,1,props.range[0],props.range[1])
@@ -409,7 +425,7 @@ const drawRadial = (props) => {
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
 	  		.attr('d', targetLabelArc);
-	  	g.append('text')
+		var targetValueText = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_label}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
@@ -417,13 +433,13 @@ const drawRadial = (props) => {
 	  		.attr('dy', '.35em')
 	  		.attr('x', ()=>{
 	  			if (tarNeg > 0) {
-	  				return d3.select('.targetLabel').node().getBBox().x;
+	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
-	  				return d3.select('.targetLabel').node().getBBox().x - d3.select('.targetValue').node().getBBox().width
+	  				return targetLabelLine.node().getBBox().x - targetValueText.node().getBBox().width
 	  			}
 	  		})
 	  		.attr('y', () => {
-	  			return d3.select('.targetLabel').node().getBBox().y
+	  			return targetLabelLine.node().getBBox().y
 	  		});
 	  		// .call(wrap, props.wrap_width);
 	} else if (props.target_label_type === "nolabel"){
@@ -446,82 +462,96 @@ const drawRadial = (props) => {
 	}
 	// console.log(props.value_label)
 	// getLabel(props.value_label_type, props.value.rendered, props.value_label, props.value_label_override)
-  	// label the value
+	// label the value
+	var drillTop = null;
+	var drillBottom = null;
   	if (props.value_label_type === "value") {
-  		g.append('text')
+		var valueText = g.append('text')
   		.attr('class', 'gaugeValue')
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#282828')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValue').node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		.style('color', '#282828');
+		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillTop = valueText;
   	} else if (props.value_label_type === "label") {
-  		g.append('text')
+		var labelText = g.append('text')
   		.attr('class', 'gaugeValueLabel')
   		.text(`${props.value_label}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
   		.style('color', '#707070')
-  		.attr('dy', '1em')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValueLabel').node().getBBox().width/2} ${0 + valueLabelCalc})`);
+  		.attr('dy', '1em');
+		labelText.attr('transform', `translate(${0 - labelText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillTop = labelText;
   	} else if (props.value_label_type === "both") {
-  		g.append('text')
+		var valueText = g.append('text')
   		.attr('class', 'gaugeValue')
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#282828')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValue').node().getBBox().width/2} ${0 + valueLabelCalc})`);
-  		g.append('text')
+  		.style('color', '#282828');
+		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillTop = valueText;
+		var labelText = g.append('text')
   		.attr('class', 'gaugeValueLabel')
   		.text(`${props.value_label}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
   		.style('color', '#707070')
-  		.attr('dy', '1.2em')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValueLabel').node().getBBox().width/2} ${0 + valueLabelCalc})`);
+  		.attr('dy', '1.2em');
+		labelText.attr('transform', `translate(${0 - labelText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillBottom = labelText;
   	} else if (props.value_label_type === "dim") {
-  		g.append('text')
+		var dimText = g.append('text')
   		.attr('class', 'gaugeValueLabel')
   		.text(`${props.value_dimension}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
   		.style('color', '#707070')
-  		.attr('dy', '1em')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValueLabel').node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		.attr('dy', '1em');
+		dimText.attr('transform', `translate(${0 - dimText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillTop = dimText;
   	} else if (props.value_label_type === "dboth") {
-  		g.append('text')
+		var valueText = g.append('text')
   		.attr('class', 'gaugeValue')
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#282828')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValue').node().getBBox().width/2} ${0 + valueLabelCalc})`);
-  		g.append('text')
+  		.style('color', '#282828');
+		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillTop = valueText;
+		var dimText = g.append('text')
   		.attr('class', 'gaugeValueLabel')
   		.text(`${props.value_dimension}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
   		.style('color', '#707070')
-  		.attr('dy', '1.2em')
-  		.attr('transform', `translate(${0 - d3.select('.gaugeValueLabel').node().getBBox().width/2} ${0 + valueLabelCalc})`);
+  		.attr('dy', '1.2em');
+		dimText.attr('transform', `translate(${0 - dimText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
+		drillBottom = dimText;
   	}
-  	d3.select(".gaugeValue").on("click", function(d,i) {
-			LookerCharts.Utils.openDrillMenu({
-	 			links: props.value_links,
-	 			event: event
- 			});
-		})
-  	d3.select(".gaugeValueLabel").on("click", function(d,i) {
-			LookerCharts.Utils.openDrillMenu({
-	 			links: props.value_links,
-	 			event: event
- 			});
-		})
+  	drillTop === null ? null : drillTop.on("click", function(d,i) {
+		LookerCharts.Utils.openDrillMenu({
+			links: props.value_links,
+			event: event
+		});
+	})
+	drillBottom === null ? null : drillBottom.on("click", function(d,i) {
+		LookerCharts.Utils.openDrillMenu({
+			links: props.value_links,
+			event: event
+		});
+	})
   	let wSca = props.w*.85 / g.node().getBBox().width;
   	let hSca = props.h*.85 / g.node().getBBox().height;
-  	// console.log(wSca, hSca)
-  	g.attr('transform', `scale(${Math.min(wSca, hSca)})translate(0 ${(props.h - g.node().getBBox().height)/4})`);
+	  // console.log(wSca, hSca)
+	// g.attr('transform', `scale(${Math.min(wSca, hSca)})translate(0 ${(props.h - g.node().getBBox().height)/4})`);
+	if (props.trellis_by === "none") {
+		g.attr('transform', `scale(${Math.min(wSca, hSca)})translate(0 ${(props.h - g.node().getBBox().height)/4})`);
+	} else {
+		g.attr('transform', `scale(1.2)translate(0 ${(props.h - g.node().getBBox().height)/4})`);
+	}
   	 // .attr('preserveAspectRatio', 'xMidYMid meet');
 }
 
