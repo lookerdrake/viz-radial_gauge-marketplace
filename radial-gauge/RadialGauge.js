@@ -424,14 +424,14 @@ const drawRadial = (props) => {
 	     	.endAngle(targetAngle);
 	  	var targetLabelLine = g.append('path')
 	  		.attr('class', 'targetLabel')
-	  		.attr('d', targetLabelArc);
+			  .attr('d', targetLabelArc);
 		var targetValueText = g.append('text')
 	  		.attr('class', 'targetValue')
 	  		.text(`${props.target_label}`)
 	  		.style('font-size', `${props.target_label_font}${limiting_aspect}`)
 	  		.style('font-family', 'Arial, Helvetica, sans-serif')
-	  		.attr('dy', '.35em')
-	  		.attr('x', ()=>{
+	  		.attr('dy', '.35em');
+			targetValueText.attr('x', ()=>{
 	  			if (tarNeg > 0) {
 	  				return targetLabelLine.node().getBBox().x;
 	  			} else {
