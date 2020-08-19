@@ -12,7 +12,7 @@ constant: VIS_ID {
 
 visualization: {
   id: "@{VIS_ID}"
-  file: "radialgauge.js"
+  url: "https://marketplace-api.looker.com/viz-dist/radialgauge.js"
   label: "@{VIS_LABEL}"
 }
 
