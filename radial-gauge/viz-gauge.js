@@ -42,7 +42,7 @@ function processPivot(data, queryResponse, config, viz, pivotKey) {
 			var tarDim = config.target_label_override === undefined || config.target_label_override === "" ? pivotKey : config.target_label_override
 		}
 	} else if (config.target_source === "first") {
-		if (config.trellis_by === "row") {
+		if (config.viz_trellis_by === "row") {
 			viz.addError({title: 'Invalid Input.', message: 'This option cannot be applied to a trellis. Please modify target label source.'});
 		} else if (data.length < 2) {
 			viz.addError({title: 'Invalid Input.', message: 'No value to target. Add a second row or modify label type.'});
@@ -122,7 +122,7 @@ function processData(data, queryResponse, config, viz) {
 			var tarDim = config.target_label_override === undefined || config.target_label_override === "" ? data[0][dimID].value : config.target_label_override
 		}
 	} else if (config.target_source === "first") {
-		if (config.trellis_by === "row") {
+		if (config.viz_trellis_by === "row") {
 			viz.addError({title: 'Invalid Input.', message: 'This option cannot be applied to a trellis. Please modify target label source.'});
 		}
 		if (data.length < 2) {
@@ -380,7 +380,22 @@ looker.plugins.visualizations.add({
 	      label: "Range Label Value Formatting",
 	      section: "Plot",
 	      order: 150
-	    },
+			},
+			spinner_type: {
+				type: "string",
+				label: "Spinner Type",
+				display: "select",
+				section: "Plot",
+				values: [
+					{"Needle": "needle"},
+					{"Spinner": "spinner"},
+					{"Automotive": "auto"},
+					{"Inner": "inner"},
+				],
+				default: "needle",
+				order: 151
+			},
+			
 
 	    // STYLE
 	    fill_color: {
@@ -436,7 +451,7 @@ looker.plugins.visualizations.add({
 	  	  display: "colors",
 	  	  order: 11
 		},
-		trellis_by: {
+		viz_trellis_by: {
 			type: "string",
 			label: "Trellis By",
 			display: "select",
@@ -524,7 +539,7 @@ looker.plugins.visualizations.add({
   	},
   	// Set up the initial state of the visualization
   	create: function(element, config) {
-    	this.container = element.appendChild(document.createElement('svg'));
+    	this.container = element
     	this.container.className = 'gauge-vis';
     	// this.chart = ReactDOM.render(
      //    	<RadialGauge />,
@@ -546,7 +561,7 @@ looker.plugins.visualizations.add({
           	return;
 		  }
 		  
-		if (config.trellis_by === "pivot" && queryResponse.pivots === undefined) {
+		if (config.viz_trellis_by === "pivot" && queryResponse.pivots === undefined) {
 			this.addError({title: 'Invalid Input.', message: 'Add pivots or change trellis type.'});
 			return;
 		}
@@ -554,7 +569,7 @@ looker.plugins.visualizations.add({
 		// Extract value, value_label, target, target_label as a chunk
 		let chunk;
 		let chunk_multiples = [];
-		if (config.trellis_by === "row") {
+		if (config.viz_trellis_by === "row") {
 			let limit = Math.min(config.trellis_cols * config.trellis_rows, data.length)
 			data.forEach( (d, i) => {
 				chunk = processData(data[i], queryResponse, config, this);
@@ -562,7 +577,7 @@ looker.plugins.visualizations.add({
 					chunk_multiples.push(chunk);
 				}
 			});
-		} else if (config.trellis_by === "pivot") {
+		} else if (config.viz_trellis_by === "pivot") {
 			let limit = Math.min(config.trellis_cols * config.trellis_rows, queryResponse.pivots.length)
 			queryResponse.pivots.forEach( (d, i) => {
 				chunk = processPivot(data, queryResponse, config, this, d.key);
@@ -582,10 +597,10 @@ looker.plugins.visualizations.add({
       		this.trigger("updateConfig", [{range_max: default_max}])
       	}
 		var viz = this;
-		if (config.trellis_by === "none") {
+		if (config.viz_trellis_by === "none") {
 			viz.radialProps = {
 				cleanup: `gauge`,
-				trellis_by: config.trellis_by,
+				trellis_by: config.viz_trellis_by,
 				w: width,
 				h: height,
 				limiting_aspect: width < height ? "vw" : "vh",
@@ -597,6 +612,8 @@ looker.plugins.visualizations.add({
 				gauge_background: config.background_color,
 				range: [config.range_min, config.range_max],
 				value: chunk.value > config.range_max ? config.range_max : chunk.value,
+				// value: config.dev_value,
+				// value_rendered: config.dev_value.toString(),
 				value_rendered: chunk.value_rendered,
 				target: chunk.target > config.range_max ? config.range_max : chunk.target,
 				value_label: chunk.value_label,
@@ -616,6 +633,7 @@ looker.plugins.visualizations.add({
 				spinner: config.spinner_length,		// SPINNER SETTINGS
 				spinner_weight: config.spinner_weight,
 				spinner_background: config.spinner_color,
+				spinner_type: config.spinner_type,
   
 				arm: config.arm_length,		// ARM SETTINGS
 				arm_weight: config.arm_weight,
@@ -642,11 +660,11 @@ looker.plugins.visualizations.add({
 		} else {
 			chunk_multiples.forEach( function(d, i) {
 				// console.log(d, i)
-				let limit = config.trellis_by === "row" ? Math.min(config.trellis_cols * config.trellis_rows, data.length) :
+				let limit = config.viz_trellis_by === "row" ? Math.min(config.trellis_cols * config.trellis_rows, data.length) :
 					Math.min(config.trellis_cols * config.trellis_rows, queryResponse.pivots.length);
 				viz.radialProps = {
 					cleanup: `subgauge${ i }`,
-					trellis_by: config.trellis_by,
+					trellis_by: config.viz_trellis_by,
 					trellis_limit: limit,
 					w: width/config.trellis_cols,			// GAUGE SETTINGS
 					h: height/config.trellis_rows,
@@ -678,6 +696,7 @@ looker.plugins.visualizations.add({
 					spinner: config.spinner_length,		// SPINNER SETTINGS
 					spinner_weight: config.spinner_weight,
 					spinner_background: config.spinner_color,
+					spinner_type: config.spinner_type,
 	
 					arm: config.arm_length,		// ARM SETTINGS
 					arm_weight: config.arm_weight,

@@ -114,7 +114,7 @@ const drawRadial = (props) => {
 
   	// find how much of the gauge is filled
   	// then fill the gauge
-  	var proportion = mapBetween(props.value,0,1,props.range[0],props.range[1])
+  	var proportion = mapBetween(props.value || props.range[0],0,1,props.range[0],props.range[1])
   	var value_standard = props.angle*2*proportion - props.angle;
   	var valueAngle = value_standard * Math.PI * 2 / 360;
   	var upBinary = props.angle < 90 ? -1 : 1;
@@ -211,27 +211,86 @@ const drawRadial = (props) => {
   		.attr('dx', `${props.range_x-1}em`)
   		.attr('dy', `${-1*props.range_y}em`)
   		.attr('transform', `translate(${rightArmSel.node().getBBox().x + rightArmSel.node().getBBox().width} ${0 + upBinary*rightArmSel.node().getBBox().height - (props.angle > 90 ? 90 - props.angle : 0)})`);
-  	// create the spinner and point to the value
-  	var spinnerArm = d3.arc()
-      	.innerRadius(0)
-      	.outerRadius(spinnerLength)
-      	.startAngle(valueAngle)
-      	.endAngle(valueAngle);
-  	var spinnerArmSel = g.append('path')
-  		.attr('class', 'spinnerArm')
-  		.attr('d', spinnerArm)
-  		.attr('fill', props.spinner_background)
-  		.attr('stroke', props.spinner_background)
-  		.attr('stroke-width', props.spinner_weight/10);
-  	g.append('circle')
-	  	.attr('class', 'spinnerCenter')
-	  	.attr('r', props.spinner_weight/10)
-	    .style('fill', props.spinner_background);
-	spinnerArmSel.on("click", function(d,i) {
+		
+		// create the spinner and point to the value
+		function getSpinnerArm(spinnerType) {
+			if (spinnerType === "spinner") {
+				return d3.arc()
+				.innerRadius(0)
+				.outerRadius(spinnerLength)
+				.startAngle(valueAngle)
+				.endAngle(valueAngle)
+			} else if (spinnerType === "needle") {
+				var _in = valueAngle - (Math.PI/2),
+					_im = _in - (55*Math.PI/60),
+					_ip = _in + (55*Math.PI/60);
+
+				var topX = spinnerLength * Math.cos(_in),
+					topY = spinnerLength * Math.sin(_in);
+
+				var leftX = (spinnerLength*0.1) * Math.cos(_im),
+					leftY = (spinnerLength*0.1) * Math.sin(_im);
+
+				var rightX = (spinnerLength*0.1) * Math.cos(_ip),
+					rightY = (spinnerLength*0.1) * Math.sin(_ip);
+
+				return d3.line()([[topX, topY], [leftX, leftY], [rightX, rightY]]) + 'Z';
+			} else if (spinnerType === "auto") {
+				var _in = valueAngle - (Math.PI/2),
+					_im = _in - (55*Math.PI/60),
+					_ip = _in + (55*Math.PI/60);
+
+				var topX = spinnerLength * Math.cos(_in),
+					topY = spinnerLength * Math.sin(_in);
+
+				var leftX = (spinnerLength*0.15) * Math.cos(_im),
+					leftY = (spinnerLength*0.15) * Math.sin(_im);
+
+				var rightX = (spinnerLength*0.15) * Math.cos(_ip),
+					rightY = (spinnerLength*0.15) * Math.sin(_ip);
+
+				return d3.line()([[topX, topY], [leftX, leftY], [rightX, rightY]]) + 'Z';
+			} else if (spinnerType === "inner") {
+				return d3.arc()
+				.innerRadius(cutoutCalc)
+				.outerRadius(spinnerLength)
+				.startAngle(valueAngle)
+				.endAngle(valueAngle)
+			} 
+		}
+		var spinnerArm = getSpinnerArm(props.spinner_type);
+
+		var spinnerArmSel = g.append('path')
+			.attr('class', 'spinnerArm')
+			.attr('d', spinnerArm)
+			.attr('fill', props.spinner_background)
+			.attr('stroke', props.spinner_background)
+			.attr('stroke-width', props.spinner_weight/10);
+
+		function getSpinnerCore(spinnerType) {
+			if (spinnerType === "spinner") {
+				return  g.append('circle')
+				.attr('class', 'spinnerCenter')
+				.attr('r', props.spinner_weight/10)
+				.style('fill', props.spinner_background);
+			} else if (spinnerType === "needle" || spinnerType === "inner") {
+				return  null
+			} else if (spinnerType === "auto") {
+				return  g.append('circle')
+				.attr('class', 'spinnerCenter')
+				.attr('r', props.spinner_weight/2)
+				.style('stroke', props.gauge_background)
+				.style('stroke-weight', '2px')
+				.style('fill', "#FFF");
+			}
+		}
+		var spinnerCore = getSpinnerCore(props.spinner_type);
+
+		spinnerArmSel.on("click", function(d,i) {
 			LookerCharts.Utils.openDrillMenu({
-	 			links: props.value_links,
-	 			event: event
- 			});
+				links: props.value_links,
+				event: event
+			});
 		})
 	// find what percent of the gauge is equivalent to the target value
 	if (props.target_source !== "off") {
