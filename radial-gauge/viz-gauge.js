@@ -312,7 +312,7 @@ looker.plugins.visualizations.add({
 	      	min: 0,
 	      	max: 120,
 	      	order: 70
-	    },
+		},
 	    target_source: {
 	      type: "string",
 	      label: "Target Source",
@@ -428,8 +428,16 @@ looker.plugins.visualizations.add({
 	      	default: "#282828",
 	      	section: "Style",
 	      	display: "color",
-	      	order: 40
+	      	order: 50
 		},
+	    value_label_color: {
+	      	type: "string",
+	      	label: "Value Label Color",
+			default: "#CECECE",
+			section: "Style",
+			display: "color",
+	      	order: 60
+	    },
 	    gauge_fill_type: {
 	      type: "string",
 	      label: "Gauge Fill Type",
@@ -647,6 +655,7 @@ looker.plugins.visualizations.add({
 				value_label_type: config.value_label_type, // LABEL SETTINGS
 			  	value_label_font: config.value_label_font,
 			  	value_label_padding: config.value_label_padding,
+			  	value_label_color: config.value_label_color,
 				target_label_type: config.target_label_type,
 			  	target_label_font: config.target_label_font,
 			  	target_label_padding: config.target_label_padding,
@@ -710,6 +719,7 @@ looker.plugins.visualizations.add({
 					value_label_type: config.value_label_type, // LABEL SETTINGS
 					value_label_font: config.value_label_font,
 					value_label_padding: config.value_label_padding,
+					value_label_color: config.value_label_color,
 					target_label_type: config.target_label_type,
 					target_label_font: config.target_label_font,
 					target_label_padding: config.target_label_padding,
