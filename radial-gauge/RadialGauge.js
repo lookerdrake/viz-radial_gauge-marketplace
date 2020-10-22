@@ -530,7 +530,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-		.style('color', '#282828');
+		.style('color', `${props.value_label_color}`);
 		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillTop = valueText;
   	} else if (props.value_label_type === "label") {
@@ -539,7 +539,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_label}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#707070')
+  		.style('color', `${props.value_label_color}`)
   		.attr('dy', '1em');
 		labelText.attr('transform', `translate(${0 - labelText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillTop = labelText;
@@ -549,7 +549,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#282828');
+  		.style('color', `${props.value_label_color}`);
 		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillTop = valueText;
 		var labelText = g.append('text')
@@ -557,7 +557,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_label}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#707070')
+  		.style('color', `${props.value_label_color}`)
   		.attr('dy', '1.2em');
 		labelText.attr('transform', `translate(${0 - labelText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillBottom = labelText;
@@ -567,7 +567,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_dimension}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#707070')
+  		.style('color', `${props.value_label_color}`)
 		.attr('dy', '1em');
 		dimText.attr('transform', `translate(${0 - dimText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillTop = dimText;
@@ -577,7 +577,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_rendered}`)
   		.style('font-size', `${props.value_label_font}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#282828');
+  		.style('color', `${props.value_label_color}`);
 		valueText.attr('transform', `translate(${0 - valueText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillTop = valueText;
 		var dimText = g.append('text')
@@ -585,7 +585,7 @@ const drawRadial = (props) => {
   		.text(`${props.value_dimension}`)
   		.style('font-size', `${props.value_label_font*.55}${limiting_aspect}`)
   		.style('font-family', 'Arial, Helvetica, sans-serif')
-  		.style('color', '#707070')
+  		.style('color', `${props.value_label_color}`)
   		.attr('dy', '1.2em');
 		dimText.attr('transform', `translate(${0 - dimText.node().getBBox().width/2} ${0 + valueLabelCalc})`);
 		drillBottom = dimText;
