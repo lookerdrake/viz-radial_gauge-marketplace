@@ -12,7 +12,7 @@ constant: VIS_ID {
 
 visualization: {
   id: "@{VIS_ID}"
-  url: "http://localhost:8080/radialgauge.js"
+  file: "radial_custom.js"
   label: "@{VIS_LABEL}"
 }
 
